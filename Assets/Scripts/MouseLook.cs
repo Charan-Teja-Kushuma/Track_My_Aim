@@ -15,6 +15,15 @@ public class MouseLook : MonoBehaviour
     [SerializeField] private float minPitch = -80f;
     [SerializeField] private float maxPitch = 80f;
 
+
+    [Header("Aim Down Sights (ADS)")]
+    [SerializeField] private float normalFOV = 60f;
+    [SerializeField] private float adsFOV = 40f;
+    [SerializeField] private float adsTransitionSpeed = 10f;
+
+    private Camera playerCamera;
+
+
     private float pitch;
 
     private void Start()
@@ -23,6 +32,11 @@ public class MouseLook : MonoBehaviour
             playerBody = transform.parent;
 
         LockCursor();
+
+        playerCamera = GetComponent<Camera>();
+
+        if (playerCamera != null)
+            playerCamera.fieldOfView = normalFOV;
     }
 
     private void Update()
@@ -66,6 +80,20 @@ public class MouseLook : MonoBehaviour
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
 
         transform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+
+        // Smooth ADS zoom while holding the right mouse button.
+        if (playerCamera != null && Mouse.current != null)
+        {
+            float targetFOV = Mouse.current.rightButton.isPressed
+                ? adsFOV
+                : normalFOV;
+
+            playerCamera.fieldOfView = Mathf.Lerp(
+                playerCamera.fieldOfView,
+                targetFOV,
+                adsTransitionSpeed * Time.deltaTime
+            );
+        }
     }
 
     private void LockCursor()
